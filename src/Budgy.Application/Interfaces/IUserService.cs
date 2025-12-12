@@ -6,10 +6,10 @@ namespace Budgy.Application.Interfaces
     {
         // Define user-related business operations here
         // Want to be able to find a particular user by their username
-        Task<UserDTO> GetUserByUsernameAsync(string username);
+        Task<UserDTO?> GetUserByUsernameAsync(string username);
 
         // Want to be able to find a particular user by their ID
-        Task<UserDTO> GetUserByIdAsync(int userId);
+        Task<UserDTO?> GetUserByIdAsync(int userId);
 
         // Create a new user
         Task<UserDTO> RegisterAsync(UserRegisterDTO newUser);
