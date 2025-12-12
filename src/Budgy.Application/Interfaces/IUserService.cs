@@ -20,6 +20,6 @@ namespace Budgy.Application.Interfaces
         // Want to be able to delete a user
         Task<bool> DeleteUserAsync(int userId);
 
-
+        Task<bool> UpdatePasswordAsync(int userId, string newPassword);
     }
 }
