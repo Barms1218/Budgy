@@ -26,7 +26,7 @@ public class ExpenseContext : DbContext
     /// <param name="optionsBuilder">The builder used to configure the database context options.</param>
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseSqlite("Data Source=ExpenseTracker.db");
+        optionsBuilder.UseSqlite("Data Source=Budgy.db");
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
