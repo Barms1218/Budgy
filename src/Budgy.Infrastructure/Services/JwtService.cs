@@ -24,7 +24,7 @@ namespace Budgy.Infrastructure.Services
             _configuration = configuration;
             _context = context;
         }
-        
+
         // Implementation of JWT service methods would go here
         public string GenerateToken(int userId, string username)
         {
@@ -54,10 +54,10 @@ namespace Budgy.Infrastructure.Services
             var userIdClaim = principal.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null)
                 return Task.FromResult<UserDTO?>(null);
-            
+
             if (!int.TryParse(userIdClaim.Value, out int userId))
                 return Task.FromResult<UserDTO?>(null);
-            
+
             return _context.Users
                 .Where(u => u.Id == userId)
                 .Select(u => new UserDTO
@@ -90,11 +90,29 @@ namespace Budgy.Infrastructure.Services
                 }, out SecurityToken validatedToken);
 
                 return principal;
-                
+
             }
             catch
             {
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Verify the password against the stored hash by hashing the input password and comparing it to the stored hash.
+        /// </summary>
+        /// <param name="password"></param>
+        /// <param name="storedHash"></param>
+        /// <returns>Whether the hashes are equal</returns>
+        public static bool VerifyPassword(string password, string storedHash)
+        {
+            try
+            {
+                return BCrypt.Net.BCrypt.Verify(password, storedHash);
+            }
+            catch
+            {
+                return false;
             }
         }
     }

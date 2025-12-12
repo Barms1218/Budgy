@@ -15,7 +15,11 @@ namespace Budgy.Infrastructure.Services
             _context = context;
         }
 
-        // Implementation of IUserService methods
+        /// <summary>
+        /// Deletes a user by their ID.
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns></returns>
         public Task<bool> DeleteUserAsync(int userId)
         {
             var user = _context.Users.FirstOrDefaultAsync(u => u.Id == userId).Result;
@@ -31,6 +35,11 @@ namespace Budgy.Infrastructure.Services
             return Task.FromResult(true);
         }
 
+        /// <summary>
+        /// Gets a user by their ID.
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns></returns>
         public Task<UserDTO?> GetUserByIdAsync(int userId)
         {
             return _context.Users
@@ -43,6 +52,11 @@ namespace Budgy.Infrastructure.Services
                 }).FirstOrDefaultAsync();
         }
 
+        /// <summary>
+        /// Gets a user by their username.
+        /// </summary>
+        /// <param name="username"></param>
+        /// <returns></returns>
         public Task<UserDTO?> GetUserByUsernameAsync(string username)
         {
             return _context.Users
@@ -55,6 +69,11 @@ namespace Budgy.Infrastructure.Services
                 }).FirstOrDefaultAsync();
         }
 
+        /// <summary>
+        /// Registers a new user.
+        /// </summary>
+        /// <param name="newUser"></param>
+        /// <returns></returns>
         public Task<UserDTO> RegisterAsync(UserRegisterDTO newUser)
         {
             User user = new User
@@ -75,16 +94,53 @@ namespace Budgy.Infrastructure.Services
             });
         }
 
+        /// <summary>
+        /// Updates a user's password.
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <param name="newPassword"></param>
+        /// <returns></returns>
         public Task<bool> UpdatePasswordAsync(int userId, string newPassword)
         {
-            throw new NotImplementedException();
+            var user = _context.Users.FirstOrDefaultAsync(u => u.Id == userId).Result;
+
+            if (user == null)
+            {
+                return Task.FromResult(false);
+            }
+
+            user.PasswordHash = HashPassword(newPassword);
+            _context.SaveChanges();
+
+            return Task.FromResult(true);
         }
 
+        /// <summary>
+        /// Updates a user's username.
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <param name="newUsername"></param>
+        /// <returns></returns>
         public Task<bool> UpdateUsernameAsync(int userId, string newUsername)
         {
-            throw new NotImplementedException();
+            var user = _context.Users.FirstOrDefaultAsync(u => u.Id == userId).Result;
+
+            if (user == null)
+            {
+                return Task.FromResult(false);
+            }
+
+            user.UserName = newUsername;
+            _context.SaveChanges();
+
+            return Task.FromResult(true);
         }
 
+        /// <summary>
+        /// Hashes a password using BCrypt.
+        /// </summary>
+        /// <param name="password"></param>
+        /// <returns></returns>
         public static string HashPassword(string password)
         {
             return BCrypt.Net.BCrypt.HashPassword(password);
