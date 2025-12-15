@@ -15,40 +15,30 @@ namespace Budgy.Infrastructure.Services
     /// </summary>
     public class ExpenseService : IExpenseService
     {
-        private readonly ExpenseContext _context;
-        private readonly JwtService _jwtService;
+        private readonly IExpenseRepository _expenseRepository;
 
         // Constructor
-        public ExpenseService(ExpenseContext context, JwtService jwtService)
+        public ExpenseService(IExpenseRepository expenseRepository)
         {
-            _context = context;
-            _jwtService = jwtService;
+            _expenseRepository = expenseRepository;
         }
 
+        /// <summary>
+        /// Creates a new expense for a user.
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <param name="newExpense"></param>
+        /// <returns></returns>
         public async Task<ExpenseDTO> CreateExpenseAsync(int userId, ExpenseCreateDTO newExpense)
         {
-            if (!isAmountValid(newExpense.Amount) || !isDateValid(newExpense.Date))
-            {
-                return null; // Invalid data
-            }
-
-            var expenseEntity = new Expense
-            {
-                UserId = userId,
-                Amount = newExpense.Amount,
-                Category = newExpense.Category,
-                Date = newExpense.Date.ToDateTime(TimeOnly.MinValue)
-            };
-
-            _context.Expenses.Add(expenseEntity);
-            await _context.SaveChangesAsync();
+            var expense = await _expenseRepository.CreateExpenseAsync(userId, newExpense);
 
             return new ExpenseDTO
             {
-                Id = expenseEntity.Id,
-                Amount = expenseEntity.Amount,
-                Category = expenseEntity.Category,
-                Date = DateOnly.FromDateTime(expenseEntity.Date)
+                Id = expense.Id,
+                Amount = expense.Amount,
+                Category = expense.Category,
+                Date = DateOnly.FromDateTime(expense.Date)
             };
         }
 
@@ -59,25 +49,18 @@ namespace Budgy.Infrastructure.Services
                 return false;
             }
 
-            var expense = await _context.Expenses
-                .Where(e => e.UserId == userId && e.Id == expenseId)
-                .FirstOrDefaultAsync();
-
-            if (expense == null)
-            {
-                return false;
-            }
-
-            _context.Expenses.Remove(expense);
-            await _context.SaveChangesAsync();
-            return true;
+            return await _expenseRepository.DeleteExpenseAsync(expenseId, userId);
         }
 
+        /// <summary>
+        /// Retrieves a specific expense by its ID for a given user.
+        /// </summary>
+        /// <param name="expenseId"></param>
+        /// <param name="userId"></param>
+        /// <returns></returns>
         public async Task<ExpenseDTO> GetExpenseByIdAsync(int expenseId, int userId)
         {
-            var expense = await _context.Expenses
-                .Where(e => e.UserId == userId && e.Id == expenseId)
-                .FirstOrDefaultAsync();
+            var expense = await _expenseRepository.GetExpenseByIdAsync(expenseId, userId);
 
             if (expense == null)
             {
@@ -100,15 +83,14 @@ namespace Budgy.Infrastructure.Services
         /// <returns></returns>
         public async Task<IEnumerable<ExpenseDTO>> GetExpensesByUserIdAsync(int userId)
         {
-            return await _context.Expenses
-                .Where(e => e.UserId == userId)
-                .Select(e => new ExpenseDTO
+            return (await _expenseRepository.GetExpensesByUserIdAsync(userId))
+                .Select(expense => new ExpenseDTO
                 {
-                    Id = e.Id,
-                    Amount = e.Amount,
-                    Category = e.Category,
-                    Date = DateOnly.FromDateTime(e.Date)
-                }).ToListAsync();
+                    Id = expense.Id,
+                    Amount = expense.Amount,
+                    Category = expense.Category,
+                    Date = DateOnly.FromDateTime(expense.Date)
+                });
         }
 
         /// <summary>
@@ -120,42 +102,22 @@ namespace Budgy.Infrastructure.Services
         /// <returns></returns>
         public async Task<decimal> GetTotalExpensesForMonthAsync(int userId, int year, int month)
         {
-            return await _context.Expenses
-                .Where(e => e.UserId == userId && e.Date.Year == year && e.Date.Month == month)
-                .SumAsync(e => e.Amount);
+            var startDate = new DateTime(year, month, 1);
+            var endDate = startDate.AddMonths(1).AddDays(-1);
+
+            return await _expenseRepository.GetTotalExpensesForMonthAsync(userId, year, month);
         }
 
+        /// <summary>
+        /// Updates an existing expense for a user.
+        /// </summary>
+        /// <param name="expenseId"></param>
+        /// <param name="userId"></param>
+        /// <param name="updatedExpense"></param>
+        /// <returns></returns>
         public async Task<bool> UpdateExpenseAsync(int expenseId, int userId, ExpenseUpdateDTO updatedExpense)
         {
-            var expense = await _context.Expenses
-                .Where(e => e.UserId == userId && e.Id == expenseId)
-                .FirstOrDefaultAsync();
-
-            if (expense == null)
-            {
-                return false;
-            }
-
-            if (!isAmountValid(updatedExpense.Amount) || !isDateValid(updatedExpense.Date))
-            {
-                return false; // Invalid data
-            }
-
-            expense.Update(updatedExpense.Amount, updatedExpense.Date.ToDateTime(TimeOnly.MinValue), updatedExpense.Category);
-            _context.Expenses.Update(expense);
-            await _context.SaveChangesAsync();
-
-            return true;
-        }
-
-        public bool isAmountValid(decimal amount)
-        {
-            return amount > 0;
-        }
-
-        public bool isDateValid(DateOnly date)
-        {
-            return date <= DateOnly.FromDateTime(DateTime.Now);
+            return await _expenseRepository.UpdateExpenseAsync(expenseId, userId, updatedExpense);
         }
     }
 }

@@ -1,22 +1,21 @@
-// File: IExpenseService.cs
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using Budgy.Domain.Entities;
+
 
 namespace Budgy.Application.Interfaces
 {
-    public interface IExpenseService
+    public interface IExpenseRepository
     {
         // C - Create
         // Returns the newly created expense object (or its ID)
-        Task<ExpenseDTO> CreateExpenseAsync(int userId, ExpenseCreateDTO newExpense);
+        Task<Expense> CreateExpenseAsync(int userId, ExpenseCreateDTO newExpense);
 
         // R - Read (Collection)
         // The userId parameter enforces that a user can only query their own expenses.
-        Task<IEnumerable<ExpenseDTO>> GetExpensesByUserIdAsync(int userId);
+        Task<IEnumerable<Expense>> GetExpensesByUserIdAsync(int userId);
 
         // R - Read (Single)
         // The userId parameter ensures the expense belongs to the requester.
-        Task<ExpenseDTO> GetExpenseByIdAsync(int expenseId, int userId);
+        Task<Expense> GetExpenseByIdAsync(int expenseId, int userId);
 
         // U - Update
         // Returns true if the update was successful (and authorized).

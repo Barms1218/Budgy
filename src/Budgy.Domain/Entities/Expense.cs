@@ -14,5 +14,15 @@ namespace Budgy.Domain.Entities
             Date = newDate;
             Category = newCategory;
         }
+
+        public bool isAmountValid(decimal amount)
+        {
+            return amount > 0;
+        }
+
+        public bool isDateValid(DateTime date)
+        {
+            return date <= DateTime.Now;
+        }
     }
 }

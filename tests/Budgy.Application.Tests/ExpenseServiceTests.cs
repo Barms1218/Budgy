@@ -9,14 +9,11 @@ namespace Budgy.Application.Tests
 {
     public class ExpenseServiceTests
     {
-        private readonly Mock<IJwtService> _jwtServiceMock;
-
-        private readonly ExpenseService _expenseService;
+        private readonly IExpenseService _expenseService;
 
         public ExpenseServiceTests()
         {
-            _jwtServiceMock = new Mock<IJwtService>();
-            _expenseService = new ExpenseService(_jwtServiceMock.Object);
+            _expenseService = new IExpenseService();
         }
 
 
