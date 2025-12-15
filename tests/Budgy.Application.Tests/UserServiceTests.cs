@@ -20,7 +20,7 @@ namespace Budgy.Application.Tests
 
         // Test methods would go here
 
-                [Fact]
+        [Fact]
         public async Task GetUserFromTokenAsync_ValidToken_ReturnsUserDTO()
         {
             // Arrange
