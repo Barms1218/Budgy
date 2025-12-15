@@ -11,9 +11,12 @@ namespace Budgy.Application.Tests
     {
         private readonly IExpenseService _expenseService;
 
+        private readonly Mock<IExpenseRepository> _expenseRepositoryMock;
+
         public ExpenseServiceTests()
         {
-            _expenseService = new IExpenseService();
+            _expenseRepositoryMock = new Mock<IExpenseRepository>();
+            _expenseService = new ExpenseService(_expenseRepositoryMock.Object);
         }
 
 
