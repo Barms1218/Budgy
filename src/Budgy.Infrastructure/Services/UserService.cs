@@ -8,11 +8,11 @@ namespace Budgy.Infrastructure.Services
 {
     public class UserService : IUserService
     {
-        private readonly ExpenseContext _context;
+        private readonly IUserRepository _userRepository;
 
-        public UserService(ExpenseContext context)
+        public UserService(IUserRepository userRepository)
         {
-            _context = context;
+            _userRepository = userRepository;
         }
 
         /// <summary>
@@ -20,19 +20,9 @@ namespace Budgy.Infrastructure.Services
         /// </summary>
         /// <param name="userId"></param>
         /// <returns></returns>
-        public Task<bool> DeleteUserAsync(int userId)
+        public async Task<bool> DeleteUserAsync(int userId)
         {
-            var user = _context.Users.FirstOrDefaultAsync(u => u.Id == userId).Result;
-
-            if (user == null)
-            {
-                return Task.FromResult(false);
-            }
-
-            _context.Users.Remove(user);
-            _context.SaveChanges();
-
-            return Task.FromResult(true);
+            return await _userRepository.DeleteUserAsync(userId);
         }
 
         /// <summary>
@@ -40,16 +30,21 @@ namespace Budgy.Infrastructure.Services
         /// </summary>
         /// <param name="userId"></param>
         /// <returns></returns>
-        public Task<UserDTO?> GetUserByIdAsync(int userId)
+        public async Task<UserDTO?> GetUserByIdAsync(int userId)
         {
-            return _context.Users
-                .Where(u => u.Id == userId)
-                .Select(u => new UserDTO
-                {
-                    Id = u.Id,
-                    UserName = u.UserName,
-                    Expenses = u.Expenses
-                }).FirstOrDefaultAsync();
+            var user = await _userRepository.GetUserByIdAsync(userId);
+
+            if (user == null)
+            {
+                return null;
+            }
+
+            return new UserDTO
+            {
+                Id = user.Id,
+                UserName = user.UserName,
+                Expenses = user.Expenses
+            };
         }
 
         /// <summary>
@@ -57,16 +52,21 @@ namespace Budgy.Infrastructure.Services
         /// </summary>
         /// <param name="username"></param>
         /// <returns></returns>
-        public Task<UserDTO?> GetUserByUsernameAsync(string username)
+        public async Task<UserDTO?> GetUserByUsernameAsync(string username)
         {
-            return _context.Users
-                .Where(u => u.UserName == username)
-                .Select(u => new UserDTO
-                {
-                    Id = u.Id,
-                    UserName = u.UserName,
-                    Expenses = u.Expenses
-                }).FirstOrDefaultAsync();
+            var user = await _userRepository.GetUserByUsernameAsync(username);
+
+            if (user == null)
+            {
+                return null;
+            }
+
+            return new UserDTO
+            {
+                Id = user.Id,
+                UserName = user.UserName,
+                Expenses = user.Expenses
+            };
         }
 
         /// <summary>
@@ -74,24 +74,16 @@ namespace Budgy.Infrastructure.Services
         /// </summary>
         /// <param name="newUser"></param>
         /// <returns></returns>
-        public Task<UserDTO> RegisterAsync(UserRegisterDTO newUser)
+        public async Task<UserDTO> RegisterAsync(UserRegisterDTO newUser)
         {
-            User user = new User
-            {
-                UserName = newUser.UserName,
-                PasswordHash = HashPassword(newUser.Password),
-                Expenses = new List<Expense>()
-            };
+            var user = await _userRepository.RegisterAsync(newUser);
 
-            _context.Users.Add(user);
-            _context.SaveChanges();
-
-            return Task.FromResult(new UserDTO
+            return new UserDTO
             {
                 Id = user.Id,
                 UserName = user.UserName,
                 Expenses = user.Expenses
-            });
+            };
         }
 
         /// <summary>
@@ -100,19 +92,17 @@ namespace Budgy.Infrastructure.Services
         /// <param name="userId"></param>
         /// <param name="newPassword"></param>
         /// <returns></returns>
-        public Task<bool> UpdatePasswordAsync(int userId, string newPassword)
+        public async Task<bool> UpdatePasswordAsync(int userId, string newPassword)
         {
-            var user = _context.Users.FirstOrDefaultAsync(u => u.Id == userId).Result;
+            var user = await _userRepository.GetUserByIdAsync(userId);
 
             if (user == null)
             {
-                return Task.FromResult(false);
+                return false;
             }
 
-            user.PasswordHash = HashPassword(newPassword);
-            _context.SaveChanges();
-
-            return Task.FromResult(true);
+            return await _userRepository.UpdatePasswordAsync(userId, HashPassword(newPassword));
+            
         }
 
         /// <summary>
@@ -121,19 +111,16 @@ namespace Budgy.Infrastructure.Services
         /// <param name="userId"></param>
         /// <param name="newUsername"></param>
         /// <returns></returns>
-        public Task<bool> UpdateUsernameAsync(int userId, string newUsername)
+        public async Task<bool> UpdateUsernameAsync(int userId, string newUsername)
         {
-            var user = _context.Users.FirstOrDefaultAsync(u => u.Id == userId).Result;
+            var user = await _userRepository.GetUserByIdAsync(userId);
 
             if (user == null)
             {
-                return Task.FromResult(false);
+                return false;
             }
 
-            user.UserName = newUsername;
-            _context.SaveChanges();
-
-            return Task.FromResult(true);
+            return await _userRepository.UpdateUsernameAsync(userId, newUsername);
         }
 
         /// <summary>
